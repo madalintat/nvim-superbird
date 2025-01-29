@@ -1,4 +1,4 @@
 # nvim-superbird
 personal nvim config
 
-[nvim-superbird.png]
+![nvim-config](nvim-superbird.png)
