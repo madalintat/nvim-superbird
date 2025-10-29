@@ -2,19 +2,29 @@ return {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufNewFile" },
   dependencies = {
-    "hrsh7th/cmp-nvim-lsp",
+    "ms-jpq/coq_nvim", -- Using COQ instead of nvim-cmp
     { "antosha417/nvim-lsp-file-operations", config = true },
     { "folke/neodev.nvim", opts = {} },
+    {
+      "williamboman/mason-lspconfig.nvim",
+      dependencies = {
+        "williamboman/mason.nvim",
+      },
+    },
   },
   config = function()
     -- import lspconfig plugin
     local lspconfig = require("lspconfig")
 
-    -- import mason_lspconfig plugin
-    local mason_lspconfig = require("mason-lspconfig")
+    -- import COQ for LSP capabilities
+    local coq = require("coq")
 
-    -- import cmp-nvim-lsp plugin
-    local cmp_nvim_lsp = require("cmp_nvim_lsp")
+    -- import mason_lspconfig plugin (with safety check)
+    local mason_lspconfig_status, mason_lspconfig = pcall(require, "mason-lspconfig")
+    if not mason_lspconfig_status then
+      vim.notify("mason-lspconfig not found", vim.log.levels.ERROR)
+      return
+    end
 
     local keymap = vim.keymap -- for conciseness
 
@@ -67,8 +77,8 @@ return {
       end,
     })
 
-    -- used to enable autocompletion (assign to every lsp server config)
-    local capabilities = cmp_nvim_lsp.default_capabilities()
+    -- used to enable autocompletion (using COQ instead of nvim-cmp)
+    -- COQ handles capabilities automatically via coq.lsp_ensure_capabilities()
 
     -- Change the Diagnostic symbols in the sign column (gutter)
     -- (not in youtube nvim video)
@@ -79,16 +89,13 @@ return {
     end
 
     mason_lspconfig.setup_handlers({
-      -- default handler for installed servers
+      -- default handler for installed servers (COQ wraps the setup)
       function(server_name)
-        lspconfig[server_name].setup({
-          capabilities = capabilities,
-        })
+        lspconfig[server_name].setup(coq.lsp_ensure_capabilities({}))
       end,
       ["svelte"] = function()
         -- configure svelte server
-        lspconfig["svelte"].setup({
-          capabilities = capabilities,
+        lspconfig["svelte"].setup(coq.lsp_ensure_capabilities({
           on_attach = function(client, bufnr)
             vim.api.nvim_create_autocmd("BufWritePost", {
               pattern = { "*.js", "*.ts" },
@@ -98,26 +105,23 @@ return {
               end,
             })
           end,
-        })
+        }))
       end,
       ["graphql"] = function()
         -- configure graphql language server
-        lspconfig["graphql"].setup({
-          capabilities = capabilities,
+        lspconfig["graphql"].setup(coq.lsp_ensure_capabilities({
           filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
-        })
+        }))
       end,
       ["emmet_ls"] = function()
         -- configure emmet language server
-        lspconfig["emmet_ls"].setup({
-          capabilities = capabilities,
+        lspconfig["emmet_ls"].setup(coq.lsp_ensure_capabilities({
           filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
-        })
+        }))
       end,
       ["lua_ls"] = function()
         -- configure lua server (with special settings)
-        lspconfig["lua_ls"].setup({
-          capabilities = capabilities,
+        lspconfig["lua_ls"].setup(coq.lsp_ensure_capabilities({
           settings = {
             Lua = {
               -- make the language server recognize "vim" global
@@ -129,12 +133,11 @@ return {
               },
             },
           },
-        })
+        }))
       end,
       ["pyright"] = function()
         -- configure python language server
-        lspconfig["pyright"].setup({
-          capabilities = capabilities,
+        lspconfig["pyright"].setup(coq.lsp_ensure_capabilities({
           settings = {
             python = {
               pythonPath = "/Users/madalintat/gen_ai_course/gen_ai/bin/python",
@@ -146,7 +149,7 @@ return {
             },
           },
           filetypes = { "python" },
-        })
+        }))
       end,
     })
   end,
