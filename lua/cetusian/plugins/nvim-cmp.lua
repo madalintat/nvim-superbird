@@ -1,8 +1,8 @@
 return {
   "hrsh7th/nvim-cmp",
-  enabled = false, -- Disabled in favor of COQ
   event = "InsertEnter",
   dependencies = {
+    "hrsh7th/cmp-nvim-lsp", -- source for LSP completions
     "hrsh7th/cmp-buffer", -- source for text in buffer
     "hrsh7th/cmp-path", -- source for file system paths
     {

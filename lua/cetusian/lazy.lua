@@ -12,7 +12,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup(
-  { { import = "cetusian.plugins" }, { import = "cetusian.plugins.lsp" }, { import = "cetusian.plugins.crackboard" } },
+  { { import = "cetusian.plugins" }, { import = "cetusian.plugins.lsp" } },
   {
     checker = {
       enabled = true,
