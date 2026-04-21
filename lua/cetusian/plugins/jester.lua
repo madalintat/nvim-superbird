@@ -14,7 +14,7 @@ return {
       terminal_cmd = ":vsplit | terminal",
       dap = {
         console = "integratedTerminal",
-        type = "node2",
+        type = "pwa-node",
       },
     })
 
