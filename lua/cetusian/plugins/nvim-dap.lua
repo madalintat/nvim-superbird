@@ -10,39 +10,24 @@ return {
     local dap = require("dap")
     local dapui = require("dapui")
 
-    -- Setup DAP UI
     dapui.setup()
-
-    -- Setup virtual text
     require("nvim-dap-virtual-text").setup()
 
-    -- Auto open/close DAP UI
-    dap.listeners.after.event_initialized["dapui_config"] = function()
-      dapui.open()
-    end
-    dap.listeners.before.event_terminated["dapui_config"] = function()
-      dapui.close()
-    end
-    dap.listeners.before.event_exited["dapui_config"] = function()
-      dapui.close()
+    dap.listeners.after.event_initialized["dapui_config"] = function() dapui.open() end
+    dap.listeners.before.event_terminated["dapui_config"] = function() dapui.close() end
+    dap.listeners.before.event_exited["dapui_config"]     = function() dapui.close() end
+
+    local function map(lhs, rhs, desc)
+      vim.keymap.set("n", lhs, rhs, { desc = desc })
     end
 
-    -- Keybindings
-    vim.keymap.set("n", "<leader>db", "<cmd>lua require('dap').toggle_breakpoint()<CR>",
-      { desc = "Toggle breakpoint" })
-    vim.keymap.set("n", "<leader>dc", "<cmd>lua require('dap').continue()<CR>",
-      { desc = "Debug continue" })
-    vim.keymap.set("n", "<leader>di", "<cmd>lua require('dap').step_into()<CR>",
-      { desc = "Debug step into" })
-    vim.keymap.set("n", "<leader>do", "<cmd>lua require('dap').step_over()<CR>",
-      { desc = "Debug step over" })
-    vim.keymap.set("n", "<leader>dO", "<cmd>lua require('dap').step_out()<CR>",
-      { desc = "Debug step out" })
-    vim.keymap.set("n", "<leader>dr", "<cmd>lua require('dap').repl.toggle()<CR>",
-      { desc = "Toggle REPL" })
-    vim.keymap.set("n", "<leader>dl", "<cmd>lua require('dap').run_last()<CR>",
-      { desc = "Run last debug config" })
-    vim.keymap.set("n", "<leader>du", "<cmd>lua require('dapui').toggle()<CR>",
-      { desc = "Toggle DAP UI" })
+    map("<leader>db", dap.toggle_breakpoint,  "Toggle breakpoint")
+    map("<leader>dc", dap.continue,           "Debug continue")
+    map("<leader>di", dap.step_into,          "Debug step into")
+    map("<leader>do", dap.step_over,          "Debug step over")
+    map("<leader>dO", dap.step_out,           "Debug step out")
+    map("<leader>dr", dap.repl.toggle,        "Toggle REPL")
+    map("<leader>dl", dap.run_last,           "Run last debug config")
+    map("<leader>du", dapui.toggle,           "Toggle DAP UI")
   end,
 }

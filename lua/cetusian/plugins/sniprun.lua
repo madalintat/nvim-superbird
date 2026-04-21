@@ -25,15 +25,15 @@ return {
     })
 
     -- Keybindings
-    vim.keymap.set("n", "<leader>rs", "<cmd>SnipRun<CR>",
+    vim.keymap.set("n", "<leader>sr", "<cmd>SnipRun<CR>",
       { desc = "Run code snippet" })
-    vim.keymap.set("v", "<leader>rs", "<cmd>SnipRun<CR>",
+    vim.keymap.set("v", "<leader>sr", "<cmd>SnipRun<CR>",
       { desc = "Run selected code" })
-    vim.keymap.set("n", "<leader>rc", "<cmd>SnipClose<CR>",
+    vim.keymap.set("n", "<leader>sc", "<cmd>SnipClose<CR>",
       { desc = "Close sniprun" })
-    vim.keymap.set("n", "<leader>rr", "<cmd>SnipReset<CR>",
+    vim.keymap.set("n", "<leader>sR", "<cmd>SnipReset<CR>",
       { desc = "Reset sniprun" })
-    vim.keymap.set("n", "<leader>rl", "<cmd>SnipLive<CR>",
+    vim.keymap.set("n", "<leader>sl", "<cmd>SnipLive<CR>",
       { desc = "Toggle live mode" })
   end,
 }

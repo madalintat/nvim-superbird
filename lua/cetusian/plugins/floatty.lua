@@ -9,9 +9,9 @@ return {
     })
 
     -- Keybindings
-    vim.keymap.set("n", "<leader>ft", "<cmd>Floatty<CR>",
+    vim.keymap.set("n", "<leader>fT", "<cmd>Floatty<CR>",
       { desc = "Toggle floating terminal" })
-    vim.keymap.set("n", "<leader>fn", "<cmd>FloattyNew<CR>",
+    vim.keymap.set("n", "<leader>fN", "<cmd>FloattyNew<CR>",
       { desc = "New floating terminal" })
     vim.keymap.set("t", "<C-\\><C-n>", "<C-\\><C-n>",
       { desc = "Exit terminal mode" })

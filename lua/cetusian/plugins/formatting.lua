@@ -4,6 +4,8 @@ return {
   config = function()
     local conform = require("conform")
 
+    local fmt_opts = { lsp_format = "fallback", async = false, timeout_ms = 1000 }
+
     conform.setup({
       formatters_by_ft = {
         javascript = { "prettier" },
@@ -21,19 +23,11 @@ return {
         lua = { "stylua" },
         python = { "isort", "black" },
       },
-      format_on_save = {
-        lsp_fallback = true,
-        async = false,
-        timeout_ms = 1000,
-      },
+      format_on_save = fmt_opts,
     })
 
     vim.keymap.set({ "n", "v" }, "<leader>mp", function()
-      conform.format({
-        lsp_fallback = true,
-        async = false,
-        timeout_ms = 1000,
-      })
+      conform.format(fmt_opts)
     end, { desc = "Format file or range (in visual mode)" })
   end,
 }
