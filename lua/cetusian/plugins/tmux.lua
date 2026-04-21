@@ -8,7 +8,7 @@ return {
         redirect_to_clipboard = true,
       },
       navigation = {
-        enable_default_keybindings = true,
+        enable_default_keybindings = false,
         cycle_navigation = true,
       },
       resize = {
