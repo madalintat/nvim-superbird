@@ -19,6 +19,12 @@ keymap.set("n", "<leader>nh", ":nohl<CR>", { desc = "Clear search highlights" })
 keymap.set("n", "<leader>+", "<C-a>", { desc = "Increment number" }) -- increment
 keymap.set("n", "<leader>-", "<C-x>", { desc = "Decrement number" }) -- decrement
 
+-- split navigation (Ctrl + hjkl)
+keymap.set("n", "<C-h>", "<C-w>h", { desc = "Move to left split" })
+keymap.set("n", "<C-j>", "<C-w>j", { desc = "Move to down split" })
+keymap.set("n", "<C-k>", "<C-w>k", { desc = "Move to up split" })
+keymap.set("n", "<C-l>", "<C-w>l", { desc = "Move to right split" })
+
 -- window management
 keymap.set("n", "<leader>sv", "<C-w>v", { desc = "Split window vertically" }) -- split window vertically
 keymap.set("n", "<leader>sh", "<C-w>s", { desc = "Split window horizontally" }) -- split window horizontally
