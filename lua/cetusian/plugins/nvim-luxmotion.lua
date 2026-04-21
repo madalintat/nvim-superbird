@@ -1,25 +1,21 @@
 return {
-  "LuxVim/nvim-luxmotion",
+  "LuxVim/whisk.nvim",
   event = "VeryLazy",
   config = function()
-    local luxmotion = require("luxmotion")
+    local whisk = require("whisk")
 
-    luxmotion.setup({
-      -- Configuration for luxmotion
+    whisk.setup({
       jump_key = "<leader><leader>",
       forward_key = "s",
       backward_key = "S",
-
-      -- Highlight settings
       highlight = {
         enabled = true,
       },
     })
 
-    -- Keybindings
-    vim.keymap.set({ "n", "x", "o" }, "s", "<cmd>lua require('luxmotion').forward()<CR>",
-      { desc = "Luxmotion forward jump" })
-    vim.keymap.set({ "n", "x", "o" }, "S", "<cmd>lua require('luxmotion').backward()<CR>",
-      { desc = "Luxmotion backward jump" })
+    vim.keymap.set({ "n", "x", "o" }, "s", "<cmd>lua require('whisk').forward()<CR>",
+      { desc = "Whisk forward jump" })
+    vim.keymap.set({ "n", "x", "o" }, "S", "<cmd>lua require('whisk').backward()<CR>",
+      { desc = "Whisk backward jump" })
   end,
 }
