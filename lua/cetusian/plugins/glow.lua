@@ -12,7 +12,7 @@ return {
     })
 
     -- Keybindings
-    vim.keymap.set("n", "<leader>mp", "<cmd>Glow<CR>",
+    vim.keymap.set("n", "<leader>mg", "<cmd>Glow<CR>",
       { desc = "Preview markdown with Glow" })
   end,
 }
