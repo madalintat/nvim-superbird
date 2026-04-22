@@ -80,9 +80,16 @@ else
   install_linux
 fi
 
-# verify nvim is available
+# verify nvim is available and new enough
 has nvim || error "Neovim install failed or not in PATH."
-success "Neovim $(nvim --version | head -1 | awk '{print $2}') ready"
+
+NVIM_VER="$(nvim --version | head -1 | awk '{print $2}' | sed 's/^v//')"
+NVIM_MAJOR="$(echo "$NVIM_VER" | cut -d. -f1)"
+NVIM_MINOR="$(echo "$NVIM_VER" | cut -d. -f2)"
+if [ "$NVIM_MAJOR" -lt 1 ] && [ "$NVIM_MINOR" -lt 10 ]; then
+  error "Neovim $NVIM_VER found, but this config requires >= 0.10 (uses vim.uv, lazydev)."
+fi
+success "Neovim $NVIM_VER ready"
 
 # ── backup existing config ────────────────────────────────────────────────────
 if [ -d "$NVIM_CONFIG" ] && [ ! -L "$NVIM_CONFIG" ]; then
@@ -97,9 +104,13 @@ cp -r "$REPO_DIR" "$NVIM_CONFIG"
 success "Config installed"
 
 # ── headless plugin bootstrap ─────────────────────────────────────────────────
-info "Bootstrapping plugins (this takes a minute)..."
+info "Bootstrapping plugins (this takes a couple of minutes on first run)..."
 nvim --headless "+Lazy! sync" +qa 2>/dev/null || true
 success "Plugins installed"
+
+info "Updating treesitter parsers..."
+nvim --headless "+TSUpdateSync" +qa 2>/dev/null || true
+success "Parsers updated"
 
 # ── done ──────────────────────────────────────────────────────────────────────
 echo ""
@@ -107,4 +118,9 @@ echo -e "${GREEN}  All done!${NC}"
 echo ""
 echo "  Run: nvim"
 echo "  On first open, Mason will install LSP servers in the background."
+if [ "$PLATFORM" = "macos" ]; then
+  echo ""
+  echo "  ${YELLOW}Kitty users:${NC} make sure ctrl+h/j/k/l pass through to Neovim"
+  echo "  (they should NOT be bound to neighboring_window in kitty.conf)."
+fi
 echo ""
