@@ -13,9 +13,9 @@ return {
       },
     })
 
-    vim.keymap.set({ "n", "x", "o" }, "s", "<cmd>lua require('whisk').forward()<CR>",
+    vim.keymap.set({ "n", "x", "o" }, "s", function() whisk.forward() end,
       { desc = "Whisk forward jump" })
-    vim.keymap.set({ "n", "x", "o" }, "S", "<cmd>lua require('whisk').backward()<CR>",
+    vim.keymap.set({ "n", "x", "o" }, "S", function() whisk.backward() end,
       { desc = "Whisk backward jump" })
   end,
 }
