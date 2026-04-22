@@ -8,12 +8,14 @@ return {
   opts = {
     preset = "helix",
     spec = {
+      { "<leader>b", group = "Buffer" },
       { "<leader>c", group = "Code" },
       { "<leader>d", group = "Diagnostic / Debug" },
       { "<leader>e", group = "Explorer" },
       { "<leader>f", group = "Find / Format" },
       { "<leader>g", group = "Git" },
-      { "<leader>h", group = "Harpoon" },
+      { "<leader>h", group = "Hunks (git)" },
+      { "<leader>H", group = "Harpoon" },
       { "<leader>j", group = "JQ" },
       { "<leader>l", group = "LSP" },
       { "<leader>m", group = "Markdown / Format" },

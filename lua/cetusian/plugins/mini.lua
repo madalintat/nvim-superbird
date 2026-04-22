@@ -1,12 +1,12 @@
 return {
   {
     "echasnovski/mini.ai",
-    event = { "BufReadPre", "BufNewFile" },
+    event = "VeryLazy",
     opts = {},
   },
   {
     "echasnovski/mini.move",
-    event = { "BufReadPre", "BufNewFile" },
+    event = "VeryLazy",
     opts = {
       mappings = {
         left  = "<M-Left>",
