@@ -9,6 +9,14 @@ return {
     vim.g.loaded_netrwPlugin = 1
 
     nvimtree.setup({
+      -- Drop <BS>=close_node so terminals that can't distinguish <C-h> from <BS>
+      -- (both are byte 0x08) don't trigger close-dir when navigating splits.
+      -- `h` still closes nodes via the default mapping.
+      on_attach = function(bufnr)
+        local api = require("nvim-tree.api")
+        api.config.mappings.default_on_attach(bufnr)
+        pcall(vim.keymap.del, "n", "<BS>", { buffer = bufnr })
+      end,
       view = {
         width = 35,
         relativenumber = true,
