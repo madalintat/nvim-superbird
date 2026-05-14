@@ -29,6 +29,16 @@ If you use **Kitty**, make sure `ctrl+h/j/k/l` aren't bound to `neighboring_wind
 
 ## Plugins
 
+### Document viewers
+
+In-Neovim viewing for images, PDFs, xlsx, docx, pptx, ipynb, and svg via kitty graphics. See [`docs/document-viewers.md`](docs/document-viewers.md).
+
+| Plugin | What it does |
+|--------|-------------|
+| [snacks.nvim](https://github.com/folke/snacks.nvim) | Image module — renders png/jpg/gif/webp/svg/pdf via kitty graphics |
+| [csvview.nvim](https://github.com/hat0uma/csvview.nvim) | Tabular csv/tsv rendering |
+| [jupytext.nvim](https://github.com/GCBallesteros/jupytext.nvim) | `.ipynb` ↔ markdown round-trip |
+
 ### UI
 
 | Plugin | What it does |

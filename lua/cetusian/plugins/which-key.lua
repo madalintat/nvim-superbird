@@ -26,6 +26,7 @@ return {
       { "<leader>t", group = "Tab" },
       { "<leader>T", group = "Terminal" },
       { "<leader>v", group = "Venv (Python)" },
+      { "<leader>V", group = "Viewer (documents)" },
       { "<leader>x", group = "Trouble" },
     },
   },

@@ -36,5 +36,18 @@ return {
     keymap.set("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", { desc = "Find string under cursor in cwd" })
     keymap.set("n", "<leader>ft", "<cmd>TodoTelescope<cr>", { desc = "Find todos" })
 
+    keymap.set("n", "<leader>fv", function()
+      require("telescope.builtin").find_files({
+        attach_mappings = function(_, map)
+          map("i", "<CR>", function(prompt_bufnr)
+            local entry = require("telescope.actions.state").get_selected_entry()
+            require("telescope.actions").close(prompt_bufnr)
+            require("cetusian.document-viewers").preview(entry.path)
+          end)
+          return true
+        end,
+      })
+    end, { desc = "Find file and preview (document viewer)" })
+
   end,
 }

@@ -16,6 +16,12 @@ return {
         local api = require("nvim-tree.api")
         api.config.mappings.default_on_attach(bufnr)
         pcall(vim.keymap.del, "n", "<BS>", { buffer = bufnr })
+        vim.keymap.set("n", "P", function()
+          local node = api.tree.get_node_under_cursor()
+          if node and node.absolute_path then
+            require("cetusian.document-viewers").preview(node.absolute_path)
+          end
+        end, { buffer = bufnr, desc = "Preview file with document viewer" })
       end,
       view = {
         width = 35,
