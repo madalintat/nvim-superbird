@@ -28,6 +28,7 @@ echo ""
 has() { command -v "$1" &>/dev/null; }
 
 install_macos() {
+  [ "${DRY_RUN:-0}" = "1" ] && { info "[DRY_RUN] skipping macOS package installs"; return; }
   if ! has brew; then
     info "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -38,6 +39,7 @@ install_macos() {
 }
 
 install_linux() {
+  [ "${DRY_RUN:-0}" = "1" ] && { info "[DRY_RUN] skipping Linux package installs"; return; }
   if has apt-get; then
     info "Installing dependencies via apt..."
     sudo apt-get update -qq
@@ -73,12 +75,53 @@ install_linux() {
   fi
 }
 
+install_doc_deps() {
+  [ "${DRY_RUN:-0}" = "1" ] && { info "[DRY_RUN] skipping doc-dep installs"; return; }
+  info "Installing document-viewer system dependencies..."
+
+  case "$PLATFORM" in
+    macos)
+      brew list imagemagick &>/dev/null || brew install imagemagick
+      brew list ghostscript &>/dev/null || brew install ghostscript
+      brew list pandoc      &>/dev/null || brew install pandoc
+      brew list xlsx2csv    &>/dev/null || brew install xlsx2csv
+      # LibreOffice ships as a cask; the binary lives in the app bundle.
+      if ! brew list --cask libreoffice &>/dev/null; then
+        brew install --cask libreoffice
+      fi
+      # Symlink soffice into /usr/local/bin (or /opt/homebrew/bin) so it's on PATH.
+      if ! has soffice; then
+        BREW_PREFIX="$(brew --prefix)"
+        if [ -x "/Applications/LibreOffice.app/Contents/MacOS/soffice" ]; then
+          sudo ln -sf "/Applications/LibreOffice.app/Contents/MacOS/soffice" "$BREW_PREFIX/bin/soffice"
+        fi
+      fi
+      ;;
+    linux)
+      if has apt-get; then
+        sudo apt-get install -y imagemagick ghostscript libreoffice pandoc python3-xlsx2csv \
+          || sudo apt-get install -y imagemagick ghostscript libreoffice pandoc
+      elif has dnf; then
+        sudo dnf install -y ImageMagick ghostscript libreoffice pandoc python3-xlsx2csv
+      elif has pacman; then
+        sudo pacman -Syu --noconfirm imagemagick ghostscript libreoffice-fresh pandoc
+      fi
+      # xlsx2csv may not be packaged everywhere; fall back to pip --user.
+      if ! has xlsx2csv; then
+        info "Falling back to pip for xlsx2csv..."
+        python3 -m pip install --user xlsx2csv
+      fi
+      ;;
+  esac
+}
+
 # ── install system deps ────────────────────────────────────────────────────────
 if [ "$PLATFORM" = "macos" ]; then
   install_macos
 else
   install_linux
 fi
+install_doc_deps
 
 # verify nvim is available and new enough
 has nvim || error "Neovim install failed or not in PATH."
@@ -91,6 +134,7 @@ if [ "$NVIM_MAJOR" -lt 1 ] && [ "$NVIM_MINOR" -lt 10 ]; then
 fi
 success "Neovim $NVIM_VER ready"
 
+if [ "${DRY_RUN:-0}" != "1" ]; then
 # ── backup existing config ────────────────────────────────────────────────────
 if [ -d "$NVIM_CONFIG" ] && [ ! -L "$NVIM_CONFIG" ]; then
   BACKUP="$HOME/.config/nvim.backup.$(date +%Y%m%d_%H%M%S)"
@@ -111,6 +155,7 @@ success "Plugins installed"
 info "Updating treesitter parsers..."
 nvim --headless "+TSUpdateSync" +qa 2>/dev/null || true
 success "Parsers updated"
+fi # end DRY_RUN guard
 
 # ── done ──────────────────────────────────────────────────────────────────────
 echo ""
