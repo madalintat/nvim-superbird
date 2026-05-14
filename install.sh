@@ -28,7 +28,6 @@ echo ""
 has() { command -v "$1" &>/dev/null; }
 
 install_macos() {
-  [ "${DRY_RUN:-0}" = "1" ] && { info "[DRY_RUN] skipping macOS package installs"; return; }
   if ! has brew; then
     info "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -39,7 +38,6 @@ install_macos() {
 }
 
 install_linux() {
-  [ "${DRY_RUN:-0}" = "1" ] && { info "[DRY_RUN] skipping Linux package installs"; return; }
   if has apt-get; then
     info "Installing dependencies via apt..."
     sudo apt-get update -qq
@@ -76,7 +74,6 @@ install_linux() {
 }
 
 install_doc_deps() {
-  [ "${DRY_RUN:-0}" = "1" ] && { info "[DRY_RUN] skipping doc-dep installs"; return; }
   info "Installing document-viewer system dependencies..."
 
   case "$PLATFORM" in
@@ -106,10 +103,18 @@ install_doc_deps() {
       elif has pacman; then
         sudo pacman -Syu --noconfirm imagemagick ghostscript libreoffice-fresh pandoc
       fi
-      # xlsx2csv may not be packaged everywhere; fall back to pip --user.
+      # xlsx2csv may not be packaged everywhere; on modern Debian/Ubuntu pip
+      # is also blocked by PEP 668. Use pipx, falling back to pip with
+      # --break-system-packages as a last resort.
       if ! has xlsx2csv; then
-        info "Falling back to pip for xlsx2csv..."
-        python3 -m pip install --user xlsx2csv
+        info "Installing xlsx2csv via pipx..."
+        if ! has pipx; then
+          has apt-get && sudo apt-get install -y pipx
+          has dnf     && sudo dnf install -y pipx
+          has pacman  && sudo pacman -Syu --noconfirm python-pipx
+        fi
+        pipx install xlsx2csv 2>/dev/null \
+          || python3 -m pip install --user --break-system-packages xlsx2csv
       fi
       ;;
   esac
@@ -134,7 +139,6 @@ if [ "$NVIM_MAJOR" -lt 1 ] && [ "$NVIM_MINOR" -lt 10 ]; then
 fi
 success "Neovim $NVIM_VER ready"
 
-if [ "${DRY_RUN:-0}" != "1" ]; then
 # ── backup existing config ────────────────────────────────────────────────────
 if [ -d "$NVIM_CONFIG" ] && [ ! -L "$NVIM_CONFIG" ]; then
   BACKUP="$HOME/.config/nvim.backup.$(date +%Y%m%d_%H%M%S)"
@@ -155,7 +159,6 @@ success "Plugins installed"
 info "Updating treesitter parsers..."
 nvim --headless "+TSUpdateSync" +qa 2>/dev/null || true
 success "Parsers updated"
-fi # end DRY_RUN guard
 
 # ── done ──────────────────────────────────────────────────────────────────────
 echo ""
