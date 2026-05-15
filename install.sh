@@ -103,6 +103,19 @@ install_doc_deps() {
       elif has pacman; then
         sudo pacman -Syu --noconfirm imagemagick ghostscript libreoffice-fresh pandoc
       fi
+      # snacks.image uses the IM7 'magick' command, but apt ships IM6 (which
+      # provides 'convert'). Symlink so snacks can invoke it.
+      if has convert && ! has magick; then
+        sudo ln -sf "$(command -v convert)" /usr/local/bin/magick
+      fi
+      # Ubuntu's default ImageMagick policy disables PDF reads for security.
+      # Allow them so snacks.image can render PDFs.
+      if [ -f /etc/ImageMagick-6/policy.xml ]; then
+        if ! grep -q 'pattern="PDF".*rights="read|write"' /etc/ImageMagick-6/policy.xml; then
+          info "Allowing PDF reads in ImageMagick-6 policy..."
+          sudo sed -i 's|<policy domain="coder" rights="none" pattern="PDF" />|<policy domain="coder" rights="read\|write" pattern="PDF" />|g' /etc/ImageMagick-6/policy.xml
+        fi
+      fi
       # xlsx2csv may not be packaged everywhere; on modern Debian/Ubuntu pip
       # is also blocked by PEP 668. Use pipx, falling back to pip with
       # --break-system-packages as a last resort.

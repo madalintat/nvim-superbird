@@ -176,7 +176,8 @@ return {
       end,
     })
 
-    -- .xlsx -> xlsx2csv -> csv (csvview attaches via FileType autocmd)
+    -- .xlsx -> xlsx2csv -> csv. Defaults to the first sheet (no -a) so the
+    -- output is a clean csv that csvview can align.
     vim.api.nvim_create_autocmd("BufReadCmd", {
       group = group,
       pattern = "*.xlsx",
@@ -187,7 +188,7 @@ return {
             vim.log.levels.WARN)
           return
         end
-        local out, err = run({ "xlsx2csv", "-a", src })
+        local out, err = run({ "xlsx2csv", src })
         if err then
           vim.notify("xlsx conversion failed: " .. err, vim.log.levels.WARN)
           return
@@ -197,6 +198,9 @@ return {
         vim.api.nvim_set_option_value("filetype", "csv", { buf = args.buf })
         vim.api.nvim_set_option_value("modified", false, { buf = args.buf })
         vim.api.nvim_set_option_value("readonly", true, { buf = args.buf })
+        -- Force csvview to attach now in case its FileType autocmd missed
+        -- the timing (e.g. opened directly via `nvim file.xlsx`).
+        pcall(vim.cmd, "CsvViewEnable")
       end,
     })
 

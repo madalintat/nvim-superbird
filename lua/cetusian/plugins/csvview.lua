@@ -1,6 +1,6 @@
 return {
   "hat0uma/csvview.nvim",
-  event = "VeryLazy",
+  lazy = false,
   cmd = { "CsvViewEnable", "CsvViewDisable", "CsvViewToggle" },
   opts = {
     parser = { comments = { "#", "//" } },
