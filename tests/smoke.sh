@@ -46,24 +46,25 @@ probe_ok() {
   fi
 }
 
-probe_renamed_to_pdf() {
-  # pptx specifically: our BufReadCmd renames the buffer to .../docview/*.pdf.
+probe_pdf_page() {
+  # PDF and PDF-derived formats (pptx) get page navigation state via
+  # buffer-local vim.b.docview_pdf_page / _total. Assert it's set.
   local file="$1"
-  local got; got="$(nvim_eval "$file" "(vim.fn.expand('%'):match('%.pdf$') and 'pdf' or 'other')")"
-  if [ "$got" = "pdf" ]; then
-    printf 'PASS %-22s renamed to .pdf\n' "$(basename "$file")"; PASS=$((PASS+1))
-  else
-    printf 'FAIL %-22s buffer not renamed\n' "$(basename "$file")"; FAIL=$((FAIL+1))
-  fi
+  local got; got="$(nvim_eval "$file" "(tostring(vim.b.docview_pdf_page or 'nil')..'/'..tostring(vim.b.docview_pdf_total or 'nil'))")"
+  case "$got" in
+    nil/*) printf 'FAIL %-22s no PDF page state\n' "$(basename "$file")"; FAIL=$((FAIL+1)) ;;
+    */nil) printf 'FAIL %-22s no PDF total state\n' "$(basename "$file")"; FAIL=$((FAIL+1)) ;;
+    *)     printf 'PASS %-22s page %s\n' "$(basename "$file")" "$got"; PASS=$((PASS+1)) ;;
+  esac
 }
 
 probe_ok                "$FIX/sample.png"
 probe_ft                "$FIX/sample.svg"   svg
-probe_ok                "$FIX/sample.pdf"
+probe_pdf_page          "$FIX/sample.pdf"
 probe_ft                "$FIX/sample.csv"   csv
 probe_ft                "$FIX/sample.docx"  markdown
 probe_ft                "$FIX/sample.xlsx"  csv
-probe_renamed_to_pdf    "$FIX/sample.pptx"
+probe_pdf_page          "$FIX/sample.pptx"
 probe_ft                "$FIX/sample.ipynb" markdown
 
 echo "---"

@@ -7,7 +7,9 @@ return {
     view = {
       display_mode = "border",
       header_lnum = 1,
-      sticky_header = { enabled = true },
+      sticky_header = { enabled = true, separator = "─" },
+      spacing = { left = 1, right = 2 },
+      min_column_width = 6,
     },
   },
   config = function(_, opts)

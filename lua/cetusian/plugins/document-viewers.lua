@@ -40,6 +40,7 @@ local function install_hint(tool)
     jupytext = mac and "pipx install jupytext"           or "pipx install jupytext",
     convert  = mac and "brew install imagemagick"        or "sudo apt install imagemagick",
     gs       = mac and "brew install ghostscript"        or "sudo apt install ghostscript",
+    pdftoppm = mac and "brew install poppler"            or "sudo apt install poppler-utils",
   }
   return hints[tool] or "(see docs/document-viewers.md)"
 end
@@ -59,6 +60,100 @@ M._find_soffice = find_soffice
 M._install_hint = install_hint
 M._run = run
 M._hash = hash
+
+-- ── PDF page navigation ─────────────────────────────────────────────────────
+-- snacks.image only renders the first page of a PDF. We give multi-page
+-- support by pre-rendering each page to a PNG with pdftoppm and swapping
+-- the buffer's file between page images via ]p / [p / gp / Gp.
+
+local function pdf_page_count(pdf)
+  local info = vim.fn.system({ "pdfinfo", pdf })
+  return tonumber((info or ""):match("Pages:%s+(%d+)")) or 1
+end
+
+local function pdf_page_png(pdf, page)
+  return vim.fs.joinpath(cache_dir, hash(pdf) .. "-p" .. page .. ".png")
+end
+
+local function pdf_render_page(pdf, page)
+  local png = pdf_page_png(pdf, page)
+  if vim.fn.filereadable(png) == 1 then return png end
+  if vim.fn.executable("pdftoppm") == 0 then
+    vim.notify("PDF page rendering needs pdftoppm (poppler-utils).",
+      vim.log.levels.WARN)
+    return nil
+  end
+  local prefix = vim.fs.joinpath(cache_dir, hash(pdf) .. "-render")
+  local _, err = run({
+    "pdftoppm", "-png", "-r", "150",
+    "-f", tostring(page), "-l", tostring(page),
+    pdf, prefix,
+  })
+  if err then
+    vim.notify("PDF page render failed: " .. err, vim.log.levels.WARN)
+    return nil
+  end
+  -- pdftoppm names output as prefix-<page>.png (zero-padded to width of total)
+  for _, n in ipairs({ tostring(page), string.format("%02d", page),
+                      string.format("%03d", page), string.format("%04d", page) }) do
+    local candidate = prefix .. "-" .. n .. ".png"
+    if vim.fn.filereadable(candidate) == 1 then
+      vim.uv.fs_rename(candidate, png)
+      return png
+    end
+  end
+  return nil
+end
+
+-- Bind page-flip keymaps on a PDF-viewer buffer.
+local function pdf_bind_keys(bufnr)
+  local map = function(lhs, rhs, desc)
+    vim.keymap.set("n", lhs, rhs,
+      { buffer = bufnr, silent = true, desc = "PDF: " .. desc })
+  end
+  map("]p", function() M.pdf_goto(vim.b.docview_pdf_page + 1) end, "next page")
+  map("[p", function() M.pdf_goto(vim.b.docview_pdf_page - 1) end, "prev page")
+  map("gp", function() M.pdf_goto(1) end,                          "first page")
+  map("Gp", function() M.pdf_goto(vim.b.docview_pdf_total) end,    "last page")
+  map("<PageDown>", function() M.pdf_goto(vim.b.docview_pdf_page + 1) end, "next page")
+  map("<PageUp>",   function() M.pdf_goto(vim.b.docview_pdf_page - 1) end, "prev page")
+end
+
+-- Render a specific page of the current buffer's underlying PDF.
+function M.pdf_goto(page)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local pdf = vim.b[bufnr].docview_pdf_src
+  local total = vim.b[bufnr].docview_pdf_total
+  if not pdf or not total then return end
+  page = math.max(1, math.min(page, total))
+  local png = pdf_render_page(pdf, page)
+  if not png then return end
+  vim.api.nvim_buf_set_name(bufnr, png)
+  vim.cmd("edit!")
+  vim.b[bufnr].docview_pdf_src = pdf
+  vim.b[bufnr].docview_pdf_page = page
+  vim.b[bufnr].docview_pdf_total = total
+  vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
+  pdf_bind_keys(bufnr)
+  vim.notify(string.format("Page %d / %d", page, total),
+    vim.log.levels.INFO, { title = "PDF" })
+end
+
+-- Initial open of a PDF buffer: count pages, render page 1, bind keys.
+local function pdf_open(args, pdf_path)
+  local total = pdf_page_count(pdf_path)
+  local png = pdf_render_page(pdf_path, 1)
+  if not png then return end
+  vim.api.nvim_buf_set_name(args.buf, png)
+  vim.cmd("edit!")
+  vim.b[args.buf].docview_pdf_src = pdf_path
+  vim.b[args.buf].docview_pdf_page = 1
+  vim.b[args.buf].docview_pdf_total = total
+  vim.api.nvim_set_option_value("readonly", true, { buf = args.buf })
+  pdf_bind_keys(args.buf)
+end
+
+M._pdf_open = pdf_open
 
 function M.preview(path)
   if not path or path == "" then return end
@@ -86,13 +181,14 @@ end
 
 function M.check()
   local tools = {
-    { name = "ImageMagick (convert)", cmd = "convert",  key = "convert" },
-    { name = "Ghostscript",           cmd = "gs",       key = "gs" },
-    { name = "LibreOffice (soffice)", cmd = "soffice",  key = "soffice",
+    { name = "ImageMagick (convert)",       cmd = "convert",  key = "convert" },
+    { name = "Ghostscript",                 cmd = "gs",       key = "gs" },
+    { name = "LibreOffice (soffice)",       cmd = "soffice",  key = "soffice",
       check = function() return find_soffice() ~= nil end },
-    { name = "Pandoc",                cmd = "pandoc",   key = "pandoc" },
-    { name = "xlsx2csv",              cmd = "xlsx2csv", key = "xlsx2csv" },
-    { name = "Jupytext",              cmd = "jupytext", key = "jupytext" },
+    { name = "Pandoc",                      cmd = "pandoc",   key = "pandoc" },
+    { name = "Poppler (pdftoppm/pdfinfo)",  cmd = "pdftoppm", key = "pdftoppm" },
+    { name = "xlsx2csv",                    cmd = "xlsx2csv", key = "xlsx2csv" },
+    { name = "Jupytext",                    cmd = "jupytext", key = "jupytext" },
   }
   local lines = { "Document viewer dependency check:", "" }
   local missing = 0
@@ -119,7 +215,16 @@ return {
   config = function()
     local group = vim.api.nvim_create_augroup("DocumentViewers", { clear = true })
 
-    -- .pptx -> libreoffice -> pdf -> snacks.image
+    -- .pdf -> render page 1 to PNG via pdftoppm -> bind ]p/[p/gp/Gp.
+    vim.api.nvim_create_autocmd("BufReadCmd", {
+      group = group,
+      pattern = "*.pdf",
+      callback = function(args)
+        pdf_open(args, args.match)
+      end,
+    })
+
+    -- .pptx -> libreoffice converts to pdf, then we use the same PDF path.
     vim.api.nvim_create_autocmd("BufReadCmd", {
       group = group,
       pattern = "*.pptx",
@@ -147,8 +252,7 @@ return {
             vim.uv.fs_rename(soffice_out, out_pdf)
           end
         end
-        vim.api.nvim_buf_set_name(args.buf, out_pdf)
-        vim.cmd("edit!")
+        pdf_open(args, out_pdf)
       end,
     })
 

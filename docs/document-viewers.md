@@ -30,6 +30,9 @@ Run `:DocViewCheck` inside nvim to see which deps are present.
 | `<leader>Vc` | Toggle CSV view on current buffer |
 | `<leader>fv` | Find a file and preview it in a float |
 | `P` (inside nvim-tree) | Preview the highlighted file |
+| `]p` / `[p` | PDF: next / prev page |
+| `gp` / `Gp` | PDF: first / last page |
+| `<PageDown>` / `<PageUp>` | PDF: next / prev page |
 
 ## How to add another format
 

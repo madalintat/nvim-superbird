@@ -4,7 +4,7 @@
 set -e
 
 MISSING=0
-for cmd in convert gs soffice pandoc xlsx2csv; do
+for cmd in convert gs soffice pandoc xlsx2csv pdftoppm pdfinfo; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "MISS: $cmd"
     MISSING=$((MISSING+1))

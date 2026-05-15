@@ -81,6 +81,7 @@ install_doc_deps() {
       brew list imagemagick &>/dev/null || brew install imagemagick
       brew list ghostscript &>/dev/null || brew install ghostscript
       brew list pandoc      &>/dev/null || brew install pandoc
+      brew list poppler     &>/dev/null || brew install poppler
       brew list xlsx2csv    &>/dev/null || brew install xlsx2csv
       # LibreOffice ships as a cask; the binary lives in the app bundle.
       if ! brew list --cask libreoffice &>/dev/null; then
@@ -96,12 +97,12 @@ install_doc_deps() {
       ;;
     linux)
       if has apt-get; then
-        sudo apt-get install -y imagemagick ghostscript libreoffice pandoc python3-xlsx2csv \
-          || sudo apt-get install -y imagemagick ghostscript libreoffice pandoc
+        sudo apt-get install -y imagemagick ghostscript libreoffice pandoc poppler-utils python3-xlsx2csv \
+          || sudo apt-get install -y imagemagick ghostscript libreoffice pandoc poppler-utils
       elif has dnf; then
-        sudo dnf install -y ImageMagick ghostscript libreoffice pandoc python3-xlsx2csv
+        sudo dnf install -y ImageMagick ghostscript libreoffice pandoc poppler-utils python3-xlsx2csv
       elif has pacman; then
-        sudo pacman -Syu --noconfirm imagemagick ghostscript libreoffice-fresh pandoc
+        sudo pacman -Syu --noconfirm imagemagick ghostscript libreoffice-fresh pandoc poppler
       fi
       # snacks.image uses the IM7 'magick' command, but apt ships IM6 (which
       # provides 'convert'). Symlink so snacks can invoke it.
