@@ -34,14 +34,14 @@ install_macos() {
   fi
 
   info "Installing dependencies via Homebrew..."
-  brew install neovim node python git lazygit || true
+  brew install neovim node python git lazygit rsync || true
 }
 
 install_linux() {
   if has apt-get; then
     info "Installing dependencies via apt..."
     sudo apt-get update -qq
-    sudo apt-get install -y neovim git curl build-essential python3 python3-pip
+    sudo apt-get install -y neovim git curl build-essential python3 python3-pip rsync
     # Node via NodeSource for a recent version
     if ! has node; then
       info "Installing Node.js..."
@@ -50,14 +50,14 @@ install_linux() {
     fi
   elif has dnf; then
     info "Installing dependencies via dnf..."
-    sudo dnf install -y neovim git curl gcc python3 python3-pip nodejs npm
+    sudo dnf install -y neovim git curl gcc python3 python3-pip nodejs npm rsync
   elif has pacman; then
     info "Installing dependencies via pacman..."
-    sudo pacman -Syu --noconfirm neovim git curl python python-pip nodejs npm
+    sudo pacman -Syu --noconfirm neovim git curl python python-pip nodejs npm rsync
   elif has snap; then
     info "Installing Neovim via snap..."
     sudo snap install nvim --classic
-    sudo apt-get install -y git curl build-essential python3 python3-pip nodejs npm 2>/dev/null || true
+    sudo apt-get install -y git curl build-essential python3 python3-pip nodejs npm rsync 2>/dev/null || true
   else
     error "No supported package manager found (apt, dnf, pacman, snap)."
   fi
@@ -153,17 +153,28 @@ if [ "$NVIM_MAJOR" -lt 1 ] && [ "$NVIM_MINOR" -lt 10 ]; then
 fi
 success "Neovim $NVIM_VER ready"
 
-# ── backup existing config ────────────────────────────────────────────────────
-if [ -d "$NVIM_CONFIG" ] && [ ! -L "$NVIM_CONFIG" ]; then
+# ── deploy config (idempotent) ────────────────────────────────────────────────
+# First-time installs back up any pre-existing config; subsequent re-runs from
+# the same source are detected via the marker file and just rsync in place.
+DEPLOY_MARKER="$NVIM_CONFIG/.deployed-from-nvim-superbird"
+if [ -d "$NVIM_CONFIG" ] && [ ! -L "$NVIM_CONFIG" ] && [ ! -f "$DEPLOY_MARKER" ]; then
   BACKUP="$HOME/.config/nvim.backup.$(date +%Y%m%d_%H%M%S)"
-  warn "Existing config found — backing up to $BACKUP"
+  warn "Existing unrelated config found — backing up to $BACKUP"
   mv "$NVIM_CONFIG" "$BACKUP"
 fi
 
-# ── copy config ───────────────────────────────────────────────────────────────
-info "Installing config to $NVIM_CONFIG..."
-cp -r "$REPO_DIR" "$NVIM_CONFIG"
-success "Config installed"
+info "Deploying config to $NVIM_CONFIG..."
+mkdir -p "$NVIM_CONFIG"
+has rsync || error "rsync is required for deploy (install with brew/apt/dnf)."
+rsync -a --delete \
+  --exclude=/.git \
+  --exclude=.DS_Store \
+  --exclude=/tests \
+  --exclude=/.claude \
+  --exclude=/docs/superpowers \
+  "$REPO_DIR/" "$NVIM_CONFIG/"
+touch "$DEPLOY_MARKER"
+success "Config deployed"
 
 # ── headless plugin bootstrap ─────────────────────────────────────────────────
 info "Bootstrapping plugins (this takes a couple of minutes on first run)..."

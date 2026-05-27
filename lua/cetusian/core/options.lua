@@ -42,3 +42,6 @@ opt.splitbelow = true -- split horizontal window to the bottom
 
 -- turn off swapfile
 opt.swapfile = false
+
+-- session: include localoptions so auto-session restores per-buffer settings
+opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,terminal,localoptions"
