@@ -6,7 +6,7 @@ return {
   opts = {
     image = {
       enabled = true,
-      doc = true,
+      doc = { enabled = true },
       force = false,
     },
     bigfile = { enabled = false },
