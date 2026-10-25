@@ -34,7 +34,8 @@ install_macos() {
   fi
 
   info "Installing dependencies via Homebrew..."
-  brew install neovim node python git lazygit rsync || true
+  # node and python come from mise and uv, not brew, so there is one of each
+  brew install neovim git lazygit rsync mise uv || true
 }
 
 install_linux() {
@@ -82,7 +83,9 @@ install_doc_deps() {
       brew list ghostscript &>/dev/null || brew install ghostscript
       brew list pandoc      &>/dev/null || brew install pandoc
       brew list poppler     &>/dev/null || brew install poppler
-      brew list xlsx2csv    &>/dev/null || brew install xlsx2csv
+      # xlsx2csv is not in Homebrew; uv installs it as an isolated tool
+      has xlsx2csv || uv tool install xlsx2csv
+      has jupytext || uv tool install jupytext
       # LibreOffice ships as a cask; the binary lives in the app bundle.
       if ! brew list --cask libreoffice &>/dev/null; then
         brew install --cask libreoffice

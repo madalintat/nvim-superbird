@@ -45,3 +45,9 @@ opt.swapfile = false
 
 -- session: include localoptions so auto-session restores per-buffer settings
 opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,terminal,localoptions"
+
+-- no plugin here uses the remote-plugin hosts; skipping them saves startup probes
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_node_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0

@@ -21,5 +21,7 @@ require("lazy").setup(
     change_detection = {
       notify = false,
     },
+    -- no plugin here needs luarocks; leaving it on makes :checkhealth fail
+    rocks = { enabled = false },
   }
 )
